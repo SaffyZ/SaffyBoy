@@ -1,0 +1,54 @@
+{
+  "keys": {
+    "right": "RIGHT",
+    "left": "LEFT",
+    "up": "UP",
+    "down": "DOWN",
+    "a": "X",
+    "b": "Z",
+    "select": "SPACE",
+    "start": "RETURN",
+    "turbo": "TAB",
+    "pause": "P",
+    "frame_advance": "N",
+    "screenshot": "F12",
+    "quick_save": "F5",
+    "quick_load": "F8",
+    "fullscreen": "F11",
+    "toggle_overlay": "O",
+    "reset": "R",
+    "show_rom_info": "I"
+  },
+  "turbo_speed": 4.0,
+  "unlimited_turbo": false,
+  "volume": 0.7,
+  "integer_scale": true,
+  "show_overlay": true,
+  "dmg_palette": 0,
+  "custom_palette": [
+    [
+      224,
+      248,
+      208
+    ],
+    [
+      136,
+      192,
+      112
+    ],
+    [
+      52,
+      104,
+      86
+    ],
+    [
+      8,
+      24,
+      32
+    ]
+  ],
+  "cgb_color_correction": true,
+  "autosave_interval": 5.0,
+  "window_width": 480,
+  "window_height": 432
+}
