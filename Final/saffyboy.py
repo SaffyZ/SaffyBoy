@@ -1,9 +1,4 @@
-#!/usr/bin/env python3
-"""
-SaffyBoy — Game Boy / Game Boy Color Emulator
-Improved accuracy, cleaner code, simpler comments.
-"""
-
+# Saffyboy! My emulator that is..... Strictly in numpy haha
 import sys
 import os
 import time
@@ -16,9 +11,6 @@ from datetime import datetime
 import pygame
 import numpy as np
 
-# ---------------------------------------------------------------------------
-# Paths and defaults
-# ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "saffyboy_config.json"
 STATES_DIR = BASE_DIR / "states"
@@ -75,7 +67,6 @@ def save_config(cfg):
 
 CONFIG = load_config()
 
-# Map key names to pygame constants
 KEY_MAP = {}
 for name in [
     "RIGHT", "LEFT", "UP", "DOWN", "X", "Z", "SPACE", "RETURN",
@@ -97,10 +88,6 @@ def get_key(name):
     s = str(val)
     return KEY_MAP.get(s.upper()) or KEY_MAP.get(s.lower())
 
-
-# ---------------------------------------------------------------------------
-# APU - lightweight but cleaner
-# ---------------------------------------------------------------------------
 class APU:
     SAMPLE_RATE = 22050
 
@@ -123,7 +110,6 @@ class APU:
 
     @staticmethod
     def _build_lfsr(step7, length):
-        # Precompute noise LFSR output
         lfsr = 0x7FFF
         bits = np.empty(length, dtype=np.int8)
         for i in range(length):
@@ -399,10 +385,6 @@ class APU:
         self.volume = state.get("volume", CONFIG.get("volume", 0.7))
         self.stop_all()
 
-
-# ---------------------------------------------------------------------------
-# MMU - memory and cartridge
-# ---------------------------------------------------------------------------
 class MMU:
     def __init__(self):
         self.rom = bytearray()
@@ -411,7 +393,7 @@ class MMU:
         self.ram_size = 0
         self.rom_bank = 1
         self.ram_bank = 0
-        self.vram = bytearray(0x4000)          # 16 KB (2 banks)
+        self.vram = bytearray(0x4000)          
         self.vram_bank = 0
         self.eram = bytearray()
         self.wram_banks = [bytearray(0x1000) for _ in range(8)]
@@ -439,7 +421,6 @@ class MMU:
         self._rtc_cycle_acc = 0
 
         self.cgb_mode = False
-        # CRAM: 8 BG palettes + 8 OBJ palettes
         self.bg_palette_ram = bytearray(64)
         self.obj_palette_ram = bytearray(64)
         for i in range(0, 64, 2):
@@ -515,7 +496,6 @@ class MMU:
                 print(f"Loaded save: {path} ({n} bytes)")
             except Exception as e:
                 print(f"Could not load save: {e}")
-
     def write_save(self):
         if self.has_battery and self.save_path:
             try:
@@ -523,7 +503,6 @@ class MMU:
                     f.write(bytes(self.eram))
             except Exception as e:
                 print(f"Could not write save: {e}")
-
     def tick_rtc(self, cycles):
         if self.cart_type not in (0x0F, 0x10, 0x11, 0x12, 0x13):
             return
@@ -548,7 +527,6 @@ class MMU:
                             self.rtc_regs[4] |= 0x80
                         self.rtc_regs[3] = day & 0xFF
                         self.rtc_regs[4] = (self.rtc_regs[4] & ~0x01) | ((day >> 8) & 0x01)
-
     def read_byte(self, addr):
         if 0x0000 <= addr < 0x4000:
             if self.cart_type in (1, 2, 3) and self.mbc1_mode == 1:
@@ -1930,10 +1908,7 @@ class PPU:
         self.frame_buffer[:] = state["frame_buffer"]
         self.mark_palettes_dirty()
 
-
-# ---------------------------------------------------------------------------
-# Timer
-# ---------------------------------------------------------------------------
+# This is the timer duhh
 class Timer:
     def __init__(self, mmu):
         self.mmu = mmu
@@ -1962,15 +1937,11 @@ class Timer:
 
     def get_state(self):
         return {"div_cycles": self.div_cycles, "tima_cycles": self.tima_cycles}
-
     def set_state(self, state):
         self.div_cycles = state["div_cycles"]
         self.tima_cycles = state["tima_cycles"]
 
-
-# ---------------------------------------------------------------------------
-# Main emulator
-# ---------------------------------------------------------------------------
+# The main stuff yehh
 class SaffyBoy:
     def __init__(self):
         self.mmu = MMU()
@@ -2018,7 +1989,7 @@ class SaffyBoy:
             "timer": self.timer.get_state(),
             "apu": self.apu.get_state(),
         }
-
+    
     def set_full_state(self, state):
         if state.get("rom_hash") != self.mmu.rom_hash:
             print("[state] Warning: ROM hash mismatch – state may be for a different ROM")
@@ -2101,13 +2072,10 @@ class SaffyBoy:
         autosave_timer = 0.0
         AUTOSAVE_INTERVAL = CONFIG.get("autosave_interval", 5.0)
         font = pygame.font.SysFont("Consolas", 14)
-
         last_bg_cram = bytes(self.mmu.bg_palette_ram)
         last_obj_cram = bytes(self.mmu.obj_palette_ram)
-
         while running:
             frame_start = time.perf_counter()
-
             keys_pressed = pygame.key.get_pressed()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -2155,7 +2123,6 @@ class SaffyBoy:
                             self.load_state(slot)
                         else:
                             self.save_state(slot)
-
             turbo_key = get_key("turbo")
             self.turbo = bool(turbo_key is not None and keys_pressed[turbo_key])
             if controller is not None:
@@ -2164,17 +2131,14 @@ class SaffyBoy:
                         self.turbo = True
                 except Exception:
                     pass
-
             if not self.paused or self.frame_advance_pending:
                 self.mmu.update_input(keys_pressed, controller)
-
                 speed = 1
                 if self.turbo:
                     if CONFIG.get("unlimited_turbo"):
                         speed = 20
                     else:
                         speed = max(1, int(CONFIG.get("turbo_speed", 4)))
-
                 for _ in range(speed):
                     cycles_run = 0
                     while cycles_run < cycles_per_frame:
@@ -2183,7 +2147,6 @@ class SaffyBoy:
                         self.timer.step(cycles)
                         cycles_run += cycles
                     self.mmu.tick_rtc(cycles_run)
-
                     if self.mmu.cgb_mode:
                         cur_bg = bytes(self.mmu.bg_palette_ram)
                         cur_obj = bytes(self.mmu.obj_palette_ram)
@@ -2195,7 +2158,6 @@ class SaffyBoy:
                     self.ppu.render(gb_surface)
 
                 self.frame_advance_pending = False
-
             # Draw
             curr_w, curr_h = screen.get_size()
             if CONFIG.get("integer_scale", True):
@@ -2206,7 +2168,6 @@ class SaffyBoy:
             scaled_h = int(144 * scale)
             offset_x = (curr_w - scaled_w) // 2
             offset_y = (curr_h - scaled_h) // 2
-
             scaled_surf = pygame.transform.scale(gb_surface, (scaled_w, scaled_h))
             screen.fill((0, 0, 0))
             screen.blit(scaled_surf, (offset_x, offset_y))
@@ -2231,9 +2192,7 @@ class SaffyBoy:
                         txt = font.render(line, True, (255, 255, 0))
                         screen.blit(txt, (4, y))
                         y += 16
-
             pygame.display.flip()
-
             if not self.turbo:
                 elapsed = time.perf_counter() - frame_start
                 target = 1.0 / target_fps
@@ -2250,9 +2209,6 @@ class SaffyBoy:
         pygame.quit()
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("SaffyBoy — Game Boy / Game Boy Color Emulator")
@@ -2275,7 +2231,6 @@ if __name__ == "__main__":
         print("  Start                          – Start")
         print("  LB                             – Turbo (hold)")
         sys.exit(1)
-
     gb = SaffyBoy()
     try:
         gb.load_rom(sys.argv[1])
