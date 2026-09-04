@@ -7,7 +7,6 @@ import hashlib
 import traceback
 from pathlib import Path
 from datetime import datetime
-
 import pygame
 import numpy as np
 
@@ -41,7 +40,6 @@ DEFAULT_CONFIG = {
     "window_width": 480,
     "window_height": 432,
 }
-
 
 def load_config():
     if CONFIG_PATH.exists():
@@ -1793,18 +1791,15 @@ class PPU:
                     actual_tile = 256 + offset
                 else:
                     actual_tile = tile_num
-
                 tile_addr = vbank * 0x2000 + actual_tile * 16 + (row * 2)
                 combined = (vram[tile_addr] << 8) | vram[tile_addr + 1]
                 row8 = lut[combined]
                 if x_flip:
                     row8 = row8[::-1]
-
                 strip_colors[t * 8:t * 8 + 8] = row8
                 if cgb:
                     strip_palnum[t * 8:t * 8 + 8] = pal_num
                     strip_priority[t * 8:t * 8 + 8] = tile_priority
-
             dst_start = max(wx, 0)
             src_start = 0 if wx >= 0 else -wx
             span = 160 - dst_start
@@ -1817,7 +1812,6 @@ class PPU:
                 line_colors[dst_start:160] = cgb_bg_table[flat_idx]
             else:
                 line_colors[dst_start:160] = dmg_bg_lut[visible]
-
         self.frame_buffer[ly] = line_colors
 
         # Sprites
@@ -1837,15 +1831,12 @@ class PPU:
                     sprites_to_render.append((x, y, tile_num, attr, i))
                     if len(sprites_to_render) == 10:
                         break
-
             if cgb:
                 sprites_to_render.sort(key=lambda s: s[4], reverse=True)
             else:
                 sprites_to_render.sort(key=lambda s: (s[0], s[4]), reverse=True)
-
             cgb_obj_table = self.get_cgb_obj_table() if cgb else None
             fb_row = self.frame_buffer[ly]
-
             for x, y, tile_num, attr, i in sprites_to_render:
                 cgb_pal_num = attr & 0x07
                 cgb_vbank = (attr >> 3) & 0x01
@@ -1853,24 +1844,20 @@ class PPU:
                 flip_y = bool(attr & 0x40)
                 flip_x = bool(attr & 0x20)
                 priority = bool(attr & 0x80)
-
                 line = ly - y
                 if flip_y:
                     line = sprite_size - 1 - line
-
                 actual_tile = tile_num
                 if sprite_size == 16:
                     actual_tile &= 0xFE
                     if line >= 8:
                         actual_tile |= 1
                         line -= 8
-
                 tile_addr = (cgb_vbank * 0x2000 if cgb else 0) + actual_tile * 16 + (line * 2)
                 combined = (vram[tile_addr] << 8) | vram[tile_addr + 1]
                 row8 = lut[combined]
                 if flip_x:
                     row8 = row8[::-1]
-
                 for px in range(8):
                     pixel_x = x + px
                     if not (0 <= pixel_x < 160):
@@ -1878,12 +1865,10 @@ class PPU:
                     color_idx = row8[px]
                     if color_idx == 0:
                         continue
-
                     if bg_master_priority:
                         bg_wins = (priority or bg_priority_line[pixel_x]) and bg_color_line[pixel_x] != 0
                         if bg_wins:
                             continue
-
                     if cgb:
                         color = cgb_obj_table[cgb_pal_num * 4 + color_idx]
                     else:
@@ -1908,7 +1893,7 @@ class PPU:
         self.frame_buffer[:] = state["frame_buffer"]
         self.mark_palettes_dirty()
 
-# This is the timer duhh
+# This is the timer duhh very important, don't delete
 class Timer:
     def __init__(self, mmu):
         self.mmu = mmu
@@ -1920,7 +1905,6 @@ class Timer:
         while self.div_cycles >= 256:
             self.div_cycles -= 256
             self.mmu.io[0x04] = (self.mmu.io[0x04] + 1) & 0xFF
-
         tac = self.mmu.read_byte(0xFF07)
         if tac & 0x04:
             freqs = [1024, 16, 64, 256]
@@ -1941,7 +1925,7 @@ class Timer:
         self.div_cycles = state["div_cycles"]
         self.tima_cycles = state["tima_cycles"]
 
-# The main stuff yehh
+# The main stuff yehh everything in here
 class SaffyBoy:
     def __init__(self):
         self.mmu = MMU()
@@ -1952,7 +1936,6 @@ class SaffyBoy:
         self.mmu.ppu = self.ppu
         self.mmu.apu = self.apu
         self.mmu.timer = self.timer
-
         self.rom_path = None
         self.rom_title = ""
         self.paused = False
@@ -2051,7 +2034,6 @@ class SaffyBoy:
         if self.mmu.cgb_mode:
             caption += " [GBC]"
         pygame.display.set_caption(caption)
-
         controller = None
         if pygame.joystick.get_count() > 0:
             controller = pygame.joystick.Joystick(0)
@@ -2059,15 +2041,12 @@ class SaffyBoy:
             print(f"Controller: {controller.get_name()} "
                   f"({controller.get_numaxes()} axes, {controller.get_numbuttons()} buttons, "
                   f"{controller.get_numhats()} hats)")
-
         screen_width = CONFIG.get("window_width", 480)
         screen_height = CONFIG.get("window_height", 432)
         screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
         gb_surface = pygame.Surface((160, 144))
-
         target_fps = 59.7275
         cycles_per_frame = 70224
-
         running = True
         autosave_timer = 0.0
         AUTOSAVE_INTERVAL = CONFIG.get("autosave_interval", 5.0)
@@ -2154,9 +2133,7 @@ class SaffyBoy:
                             self.ppu.mark_palettes_dirty()
                             last_bg_cram = cur_bg
                             last_obj_cram = cur_obj
-
                     self.ppu.render(gb_surface)
-
                 self.frame_advance_pending = False
             # Draw
             curr_w, curr_h = screen.get_size()
@@ -2171,7 +2148,6 @@ class SaffyBoy:
             scaled_surf = pygame.transform.scale(gb_surface, (scaled_w, scaled_h))
             screen.fill((0, 0, 0))
             screen.blit(scaled_surf, (offset_x, offset_y))
-
             if self.show_overlay:
                 self.frame_count += 1
                 now = time.time()
@@ -2198,16 +2174,13 @@ class SaffyBoy:
                 target = 1.0 / target_fps
                 if elapsed < target:
                     time.sleep(target - elapsed)
-
             autosave_timer += 1.0 / target_fps
             if autosave_timer >= AUTOSAVE_INTERVAL:
                 autosave_timer = 0.0
                 self.mmu.write_save()
-
         self.mmu.write_save()
         save_config(CONFIG)
         pygame.quit()
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
