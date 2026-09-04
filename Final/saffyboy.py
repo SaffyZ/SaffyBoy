@@ -93,7 +93,7 @@ class APU:
 
     def __init__(self):
         try:
-            pygame.mixer.init(frequency=self.SAMPLE_RATE, size=-16, channels=2)
+            pygame.mixer.init(frequency=self.SAMPLE_RATE, size=-16, channels=2) # Comment this line if you don't want audio
             self.ch1_channel = pygame.mixer.Channel(0)
             self.ch2_channel = pygame.mixer.Channel(1)
             self.ch3_channel = pygame.mixer.Channel(2)
@@ -205,7 +205,7 @@ class APU:
         amplitude = (vol / 15.0) * 0.07
         wave = (square * amplitude * 32767).astype(np.int16)
         return self._fade_edges(wave)
-
+                         
     def _wave_channel(self, freq, wave_ram, vol_shift, duration):
         if freq <= 0:
             return None
