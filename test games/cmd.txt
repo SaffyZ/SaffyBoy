@@ -1,1 +1,0 @@
-python gameboy.py C:\Users\Saffy\Desktop\Me\Work\projects\Games\Gameboy Emulator\test games\
