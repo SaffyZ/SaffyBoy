@@ -1,3 +1,3 @@
 This ma saffyboy emulator
 
-They have the Gabeboy why not a saffyboy duhhh
+They have the Gameboy why not a saffyboy duhhh
